@@ -15,21 +15,29 @@ preset or mix an exact color on a wheel.
 
 ## Install
 
-This plugin lives in your local plugins folder already:
+Install the plugin straight from its git repository (adds it to your plugins
+folder, validates it, and enables it):
 
 ```bash
-omarchy plugin enable tariq.alienfx --section right
+omarchy plugin add https://github.com/tariqbaater/alienfx.git --enable
 omarchy-restart-shell
 ```
 
-`--section` places the widget in the bar: `left`, `center`, or `right` (the
-default). The shell restart is required the first time so the widget is added
-to the bar — `omarchy plugin enable` alone only syncs the background service.
+If you skipped `--enable`, or want to move the widget afterwards, use:
 
-To disable or remove:
+```bash
+omarchy plugin enable tariq.alienfx right
+```
+
+`right` is the bar section — `left`, `center`, or `right` (the default). The
+shell restart is required the first time so the widget is added to the bar —
+`omarchy plugin enable` alone only syncs the background service.
+
+To disable, update, or remove:
 
 ```bash
 omarchy plugin disable tariq.alienfx
+omarchy plugin update tariq.alienfx
 omarchy plugin remove tariq.alienfx
 ```
 
