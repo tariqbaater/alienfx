@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "tariq.alienfx",
+  "name": "Alienfx",
+  "version": "0.2.0",
+  "author": "tariq",
+  "license": "MIT",
+  "description": "Control the Alienware Alpha RGB LED zones (head and left) from the Omarchy bar via alienware-cli.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Alienfx",
+    "description": "Alienware Alpha head/left LED zones: cycle presets, pick a color, or mix one on the wheel.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "preset": "Off",
+      "customColor": "#000000"
+    },
+    "schema": [
+      {
+        "key": "preset",
+        "type": "enum",
+        "label": "Lighting preset",
+        "options": [
+          { "value": "Off", "label": "Off" },
+          { "value": "Red", "label": "Red" },
+          { "value": "Green", "label": "Green" },
+          { "value": "Blue", "label": "Blue" },
+          { "value": "Cyan", "label": "Cyan" },
+          { "value": "Magenta", "label": "Magenta" },
+          { "value": "Yellow", "label": "Yellow" },
+          { "value": "White", "label": "White" },
+          { "value": "Custom", "label": "Custom color" }
+        ],
+        "defaultValue": "Off"
+      },
+      {
+        "key": "customColor",
+        "type": "string",
+        "label": "Custom color",
+        "description": "24-bit hex color used by the Custom preset (set from the color wheel).",
+        "defaultValue": "#000000"
+      }
+    ]
+  }
+}
