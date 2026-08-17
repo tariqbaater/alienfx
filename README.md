@@ -1,5 +1,7 @@
 # Alienfx for Omarchy
 
+![Alienfx bar widget preview](assets/alienfx.png)
+
 Control the Alienware Alpha LED zones (head + left) straight from the Omarchy
 bar. A headless background service wraps `alienware-cli`; a bar widget shows an
 alien head whose eyes glow with the current zone colors and lets you pick a
@@ -12,6 +14,30 @@ preset or mix an exact color on a wheel.
 - A udev rule so writes work without sudo:
   `/etc/udev/rules.d/90-alienware-rgb.rules` (chmods the sysfs controls to
   0666 on driver add). Without it, writes fail with "do you need sudo".
+
+## Supported devices
+
+The plugin drives the legacy `rgb_zones` sysfs interface of the mainline
+`alienware-wmi` kernel driver. The models explicitly listed by the driver for
+that interface are:
+
+| Model                        | LED zones |
+| ---------------------------- | --------- |
+| Alienware ASM100 (Alpha)     | 2         |
+| Alienware ASM200 (Alpha R2)  | 2         |
+| Alienware ASM201 (Alpha R2)  | 2         |
+| Alienware X51 R1             | 3         |
+| Alienware X51 R2             | 3         |
+| Alienware X51 R3             | 4         |
+| Dell Inspiron 5675           | 2         |
+
+Plus a generic fallback quirk (2 zones) for any unlisted machine that still
+binds the legacy interface — but it is not guaranteed to work.
+
+Newer Alienware/Dell machines (m16/m17/m18, x15/x17, and the Dell G3/G5/G15
+series) are **not** supported: their `alienware-wmi` quirk sets `num_zones = 0`
+and their RGB runs on a separate STM32 USB-HID controller (vendor `187c`),
+which needs `alienfx-tools` rather than `alienware-cli`.
 
 ## Install
 
