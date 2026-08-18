@@ -89,7 +89,7 @@ Panel {
     if (activity.activePreset !== stored) activity.applyPreset(stored)
   }
 
-  readonly property int menuCount: presetNames().length + 1
+  readonly property int menuCount: presetNames().length
 
   function moveCursor(dy) {
     if (menuCount <= 1) return
@@ -98,11 +98,6 @@ Panel {
 
   function activateCursor() {
     var names = presetNames()
-    if (menuIndex === names.length) {
-      cyclePreset(-1)
-      close()
-      return
-    }
     if (names.length === 0) return
     applyPreset(names[menuIndex])
     close()
@@ -193,21 +188,6 @@ Panel {
               current: root.currentPreset === modelData
               onHovered: function(on) { if (on) root.menuIndex = index }
               onClicked: root.applyPreset(modelData)
-            }
-          }
-
-          PanelSeparator { foreground: root.foreground }
-
-          PresetRow {
-            label: "Cycle"
-            color: "transparent"
-            hasCursor: root.menuIndex === root.presetNames().length
-            onHovered: function(on) {
-              if (on) root.menuIndex = root.presetNames().length
-            }
-            onClicked: {
-              root.cyclePreset(1)
-              root.close()
             }
           }
         }
