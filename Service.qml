@@ -134,7 +134,15 @@ QtObject {
   function flushWrites() {
     if (writeProcess.running) return
     if (root._pendingParts.length === 0) return
-    writeProcess.command = [root.cliPath].concat(root._pendingParts)
+    // Live applies persist-sync the same color again, and dragging queues many
+    // updates before a flush runs. alienware-cli rejects duplicate flags, so
+    // coalesce each flag to its last value instead of passing them all.
+    var parts = root._pendingParts
+    var last = {}
+    for (var i = 0; i < parts.length; i += 2) last[String(parts[i])] = parts[i + 1]
+    var args = []
+    for (var key in last) args.push(key, last[key])
+    writeProcess.command = [root.cliPath].concat(args)
     root._pendingParts = []
     root.busy = true
     writeProcess.running = true

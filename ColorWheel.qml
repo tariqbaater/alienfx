@@ -4,9 +4,12 @@ import Quickshell
 import qs.Commons
 import qs.Ui
 
-// Hue/saturation wheel plus a brightness slider and live preview. Emits the
-// 24-bit hex of the mixed color on every change and `interactionEnded()` when
-// the user releases, so callers can apply live and persist on release.
+// Hue/saturation wheel plus a brightness slider and live preview. The wheel
+// disc is a pre-rendered 2x PNG (assets/colorwheel.png); Qt Quick's 2D canvas
+// putImageData path doesn't render in layer-shell popups on this stack, so a
+// plain Image is used instead. Emits the 24-bit hex of the mixed color on
+// every change and `interactionEnded()` when the user releases, so callers can
+// apply live and persist on release.
 Item {
   id: root
 
@@ -89,6 +92,19 @@ Item {
     root.colorPicked(root.hexText)
   }
 
+  function pick(mx, my) {
+    var w = root.wheelSize
+    var h = root.wheelSize
+    var dx = mx - w / 2
+    var dy = my - h / 2
+    var R = Math.min(w, h) / 2
+    var r = Math.sqrt(dx * dx + dy * dy)
+    root.hue = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
+    root.sat = Math.max(0, Math.min(1, r / R))
+    root.value = 1
+    root.emitColor()
+  }
+
   Column {
     anchors.fill: parent
     spacing: Style.space(6)
@@ -98,42 +114,14 @@ Item {
       width: root.wheelSize
       height: root.wheelSize
 
-      Canvas {
+      Image {
         id: disc
         anchors.fill: parent
-        antialiasing: true
-        onPaint: {
-          var ctx = disc.getContext("2d")
-          var w = disc.width
-          var h = disc.height
-          var cx = w / 2
-          var cy = h / 2
-          var R = Math.min(cx, cy)
-          var img = ctx.createImageData(w, h)
-          var d = img.data
-          var dx, dy, r, hue, sat, c
-          for (var y = 0; y < h; y++) {
-            for (var x = 0; x < w; x++) {
-              dx = x - cx
-              dy = y - cy
-              r = Math.sqrt(dx * dx + dy * dy)
-              var i = (y * w + x) * 4
-              if (r <= R) {
-                hue = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
-                sat = r / R
-                c = root.hsvToRgb(hue, sat, 1)
-                d[i] = c[0]
-                d[i + 1] = c[1]
-                d[i + 2] = c[2]
-                d[i + 3] = 255
-              } else {
-                d[i + 3] = 0
-              }
-            }
-          }
-          ctx.putImageData(img, 0, 0)
-        }
-        Component.onCompleted: disc.requestPaint()
+        source: Qt.resolvedUrl("assets/colorwheel.png")
+        sourceSize.width: root.wheelSize * 2
+        sourceSize.height: root.wheelSize * 2
+        fillMode: Image.PreserveAspectFit
+        smooth: true
       }
 
       MouseArea {
@@ -141,25 +129,13 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.CrossCursor
 
-        function pick(mx, my) {
-          var w = wheelMouse.width
-          var h = wheelMouse.height
-          var dx = mx - w / 2
-          var dy = my - h / 2
-          var R = Math.min(w, h) / 2
-          var r = Math.sqrt(dx * dx + dy * dy)
-          root.hue = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360
-          root.sat = Math.max(0, Math.min(1, r / R))
-          root.emitColor()
-        }
-
         onPressed: function(m) {
           if (m.button !== Qt.LeftButton) return
           root._dragging = true
-          pick(m.x, m.y)
+          root.pick(m.x, m.y)
         }
         onPositionChanged: function(m) {
-          if (root._dragging) pick(m.x, m.y)
+          if (root._dragging) root.pick(m.x, m.y)
         }
         onReleased: function(m) {
           if (m.button !== Qt.LeftButton) return

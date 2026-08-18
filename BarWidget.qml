@@ -148,7 +148,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: popup.fittedContentWidth(Style.space(240))
+    contentWidth: popup.fittedContentWidth(Style.space(360))
     contentHeight: popup.fittedContentHeight(content.implicitHeight)
 
     PanelKeyCatcher {
@@ -162,7 +162,7 @@ Panel {
       Column {
         id: content
         width: parent.width
-        spacing: Style.space(8)
+        spacing: Style.space(10)
 
         PanelHero {
           width: parent.width
@@ -173,41 +173,56 @@ Panel {
           fontFamily: root.fontFamily
         }
 
-        Column {
-          width: parent.width
-          spacing: Style.space(4)
-
-          Repeater {
-            model: root.presetNames()
-            delegate: PresetRow {
-              label: modelData
-              color: modelData === "Custom"
-                ? root.mixedColorPreview
-                : (root.activity ? root.activity.presetHex(modelData) : "#000000")
-              hasCursor: root.menuIndex === index
-              current: root.currentPreset === modelData
-              onHovered: function(on) { if (on) root.menuIndex = index }
-              onClicked: root.applyPreset(modelData)
-            }
-          }
-        }
-
         PanelSeparator { foreground: root.foreground }
 
-        PanelSectionHeader {
+        RowLayout {
           width: parent.width
-          text: "Color wheel"
-          foreground: root.foreground
-          fontFamily: root.fontFamily
-        }
+          spacing: Style.space(16)
 
-        ColorWheel {
-          id: colorWheel
-          anchors.horizontalCenter: parent.horizontalCenter
-          bar: root.bar
-          onColorPicked: function(hex) { root.onWheelColor(hex) }
-          onInteractionEnded: {
-            if (root.activity) root.persistColor(colorWheel.hexText)
+          Column {
+            Layout.fillWidth: true
+            spacing: Style.space(4)
+
+            PanelSectionHeader {
+              text: "Presets"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+            }
+
+            Repeater {
+              model: root.presetNames()
+              delegate: PresetRow {
+                label: modelData
+                color: modelData === "Custom"
+                  ? root.mixedColorPreview
+                  : (root.activity ? root.activity.presetHex(modelData) : "#000000")
+                hasCursor: root.menuIndex === index
+                current: root.currentPreset === modelData
+                onHovered: function(on) { if (on) root.menuIndex = index }
+                onClicked: root.applyPreset(modelData)
+              }
+            }
+          }
+
+          Column {
+            width: Math.max(Style.space(150), colorWheel.implicitWidth)
+            spacing: Style.space(4)
+
+            PanelSectionHeader {
+              text: "Color"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+            }
+
+            ColorWheel {
+              id: colorWheel
+              anchors.horizontalCenter: parent.horizontalCenter
+              bar: root.bar
+              onColorPicked: function(hex) { root.onWheelColor(hex) }
+              onInteractionEnded: {
+                if (root.activity) root.persistColor(colorWheel.hexText)
+              }
+            }
           }
         }
       }
@@ -225,7 +240,7 @@ Panel {
     signal hovered(bool on)
 
     width: parent ? parent.width : implicitWidth
-    implicitHeight: Style.space(40)
+    implicitHeight: Style.space(36)
     foreground: root.foreground
 
     RowLayout {
@@ -235,9 +250,9 @@ Panel {
       spacing: Style.space(10)
 
       Rectangle {
-        width: Style.space(14)
-        height: Style.space(14)
-        radius: Style.space(7)
+        width: Style.space(16)
+        height: Style.space(16)
+        radius: Style.space(8)
         color: row.color
         border.width: 1
         border.color: root.dim
@@ -246,7 +261,7 @@ Panel {
 
       Text {
         text: row.label
-        color: root.foreground
+        color: row.hasCursor ? root.foreground : Qt.darker(root.foreground, 1.15)
         font.family: root.fontFamily
         font.pixelSize: Style.font.body
         font.bold: row.hasCursor
@@ -257,7 +272,7 @@ Panel {
       Text {
         visible: row.current
         text: "●"
-        color: root.dim
+        color: row.accent
         font.family: root.fontFamily
         font.pixelSize: Style.font.caption
         Layout.alignment: Qt.AlignVCenter
