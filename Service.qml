@@ -114,6 +114,18 @@ QtObject {
     root.queueWrite("-H", root.headRed + " " + root.headGreen + " " + root.headBlue)
   }
 
+  function setHeadHex(hex) {
+    var rgb = root.hexToRgb(hex)
+    root.activePreset = "Custom"
+    root.setHead(rgb[0], rgb[1], rgb[2])
+  }
+
+  function setLeftHex(hex) {
+    var rgb = root.hexToRgb(hex)
+    root.activePreset = "Custom"
+    root.setLeft(rgb[0], rgb[1], rgb[2])
+  }
+
   function setLeft(r, g, b) {
     root.leftRed = root.clamp(r)
     root.leftGreen = root.clamp(g)

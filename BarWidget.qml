@@ -49,9 +49,30 @@ Panel {
     for (var key in settings) if (key !== "id") next[key] = settings[key]
     next.preset = "Custom"
     next.customColor = hex
+    delete next.headColor
+    delete next.leftColor
     settings = next
     if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function")
       bar.shell.updateEntryInline(moduleName, next)
+  }
+
+  function persistZoneColor(zone, hex) {
+    if (!activity) return
+    var next = {}
+    for (var key in settings) if (key !== "id") next[key] = settings[key]
+    next.preset = "Custom"
+    next[zone] = hex
+    settings = next
+    if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function")
+      bar.shell.updateEntryInline(moduleName, next)
+  }
+
+  function persistHeadColor(hex) {
+    root.persistZoneColor("headColor", hex)
+  }
+
+  function persistLeftColor(hex) {
+    root.persistZoneColor("leftColor", hex)
   }
 
   function applyPreset(name) {
@@ -81,9 +102,18 @@ Panel {
     if (!activity) return
     var stored = String(setting("preset", "Off"))
     if (stored === "Custom") {
-      var c = String(setting("customColor", "#000000"))
-      root.mixedColorPreview = c
-      if (activity.activePreset !== "Custom") activity.applyColor(c)
+      var hc = String(setting("headColor", ""))
+      var lc = String(setting("leftColor", ""))
+      var cc = String(setting("customColor", "#000000"))
+      root.mixedColorPreview = cc
+      if (hc || lc) {
+        if (hc) activity.setHeadHex(hc)
+        else if (cc) activity.setHeadHex(cc)
+        if (lc) activity.setLeftHex(lc)
+        else if (cc) activity.setLeftHex(cc)
+        return
+      }
+      if (activity.activePreset !== "Custom") activity.applyColor(cc)
       return
     }
     if (activity.activePreset !== stored) activity.applyPreset(stored)
@@ -154,6 +184,7 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
+      blocked: hexHead.editing || hexLeft.editing
       onMoveRequested: function(dx, dy) { if (dy !== 0) root.moveCursor(dy) }
       onActivateRequested: root.activateCursor()
       onCloseRequested: root.close()
@@ -225,6 +256,39 @@ Panel {
             }
           }
         }
+
+        PanelSeparator { foreground: root.foreground }
+
+        RowLayout {
+          width: parent.width
+          spacing: Style.space(10)
+
+          HexInput {
+            id: hexHead
+            Layout.fillWidth: true
+            label: "Head"
+            value: root.activity ? root.activity.headHex : "#000000"
+            onCommitted: function(hex) {
+              if (!root.activity) return
+              root.activity.setHeadHex(hex)
+              root.persistHeadColor(hex)
+              root.mixedColorPreview = hex
+            }
+          }
+
+          HexInput {
+            id: hexLeft
+            Layout.fillWidth: true
+            label: "Left"
+            value: root.activity ? root.activity.leftHex : "#000000"
+            onCommitted: function(hex) {
+              if (!root.activity) return
+              root.activity.setLeftHex(hex)
+              root.persistLeftColor(hex)
+              root.mixedColorPreview = hex
+            }
+          }
+        }
       }
     }
   }
@@ -287,5 +351,73 @@ Panel {
       onExited: row.hovered(false)
       onClicked: row.clicked()
     }
+  }
+
+  component HexInput: Item {
+    id: field
+
+    property string label: ""
+    property string value: "#000000"
+    readonly property bool editing: input.activeFocus
+
+    signal committed(string hex)
+
+    width: parent ? parent.width : implicitWidth
+    implicitHeight: Style.space(32)
+
+    function normalize(t) {
+      t = String(t || "").trim().replace(/^#/, "")
+      if (t.length === 3) {
+        t = t.charAt(0) + t.charAt(0) + t.charAt(1) + t.charAt(1) + t.charAt(2) + t.charAt(2)
+      }
+      return /^[0-9a-fA-F]{6}$/.test(t) ? "#" + t.toUpperCase() : ""
+    }
+
+    function commitCurrent() {
+      var n = field.normalize(input.text)
+      if (n) field.committed(n)
+      else input.text = field.value
+    }
+
+    RowLayout {
+      anchors.fill: parent
+      anchors.leftMargin: Style.spacing.rowPaddingX
+      anchors.rightMargin: Style.spacing.rowPaddingX
+      spacing: Style.space(8)
+
+      Text {
+        text: field.label
+        color: Qt.darker(root.foreground, 1.2)
+        font.family: root.fontFamily
+        font.pixelSize: Style.font.caption
+        font.bold: true
+        Layout.alignment: Qt.AlignVCenter
+      }
+
+      Rectangle {
+        width: Style.space(16)
+        height: Style.space(16)
+        radius: Style.space(8)
+        color: field.value
+        border.width: 1
+        border.color: root.dim
+        Layout.alignment: Qt.AlignVCenter
+      }
+
+      TextField {
+        id: input
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignVCenter
+        foreground: root.foreground
+        horizontalPadding: Style.space(8)
+        verticalPadding: Style.space(4)
+        font.pixelSize: Style.font.body
+        onAccepted: field.commitCurrent()
+        onEditingFinished: field.commitCurrent()
+      }
+    }
+
+    onValueChanged: if (!field.editing) input.text = field.value
+    Component.onCompleted: input.text = field.value
   }
 }
